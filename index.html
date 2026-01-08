@@ -18,12 +18,30 @@
 		"Authorization":`token ${token}`,
 		"Accept":"application/vnd.github.v3+json"
 	};
-	const url = `https://api.github.com/repos/${username}/${repositoryname}/contents/index.html`;
-	fetch(url, { method:"GET", headers:header_auth})
-		.then(e=>e.json())
-		.then(e=>atob(e.content))
-		.then(e=>{
+	
+	
+	const info = async path => {
+		const url = `https://api.github.com/repos/${username}/${repositoryname}/contents/${path}`;
+		return await (await fetch(url, { method:"GET", headers:header_auth})).json();
+	}
+	const fetchAsDataURL = async url => {
+		const res = await fetch(url);
+		if (!res.ok) {
+			throw new Error(`Fetch failed: ${res.status}`);
+		}
 
+		const blob = await res.blob();
+
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onloadend = () => resolve(reader.result);
+			reader.onerror = reject;
+			reader.readAsDataURL(blob);
+		});
+	}
+	info("index.html")
+		.then(e=>atob(e.content))
+		.then(async e=> {
 			const parser = new DOMParser();
 			const newDoc = parser.parseFromString(e, "text/html");
 
@@ -31,12 +49,19 @@
 				newDoc.documentElement,
 				document.documentElement
 			);
-			
-			document.querySelectorAll("script[src]").forEach(old => {
+			for(let old of document.querySelectorAll("link[rel=stylesheet]")){
+				const base = old.href.replace(location.origin+location.pathname, "");
+				const url = (await info(base)).download_url;
+				old.href = await fetchAsDataURL(url);
+			}
+			for(let old of document.querySelectorAll("script[src]")){
 				const s = document.createElement("script");
-				s.src = old.src;
+				const base = old.src.replace(location.origin+location.pathname, "");
+				const url = (await info(base)).download_url;
+				s.src = await fetchAsDataURL(url);
+				s.async = false;
 				old.replaceWith(s);
-			});
+			}
 		});
 })();
 </script>

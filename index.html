@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Document</title>
+</head>
+<body>
+<script>
+(()=>{
+	const param = location.search.slice(1).split(",");
+
+
+	const username = param[0];
+	const repositoryname = param[1];
+	const token = param[2];
+	const header_auth = {
+		"Authorization":`token ${token}`,
+		"Accept":"application/vnd.github.v3+json"
+	};
+	const url = `https://api.github.com/repos/${username}/${repositoryname}/contents/index.html`;
+	fetch(url, { method:"GET", headers:header_auth})
+		.then(e=>e.json())
+		.then(e=>atob(e.content))
+		.then(e=>{
+
+			const parser = new DOMParser();
+			const newDoc = parser.parseFromString(e, "text/html");
+
+			document.replaceChild(
+				newDoc.documentElement,
+				document.documentElement
+			);
+			
+			document.querySelectorAll("script[src]").forEach(old => {
+				const s = document.createElement("script");
+				s.src = old.src;
+				old.replaceWith(s);
+			});
+		});
+})();
+</script>
+</body>
+</html>

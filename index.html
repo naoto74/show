@@ -57,7 +57,7 @@
 			for(let old of document.querySelectorAll("script[src]")){
 				const s = document.createElement("script");
 				const base = old.src.replace(location.origin+location.pathname, "");
-				const url = (await info(base)).download_url;
+				const url = (await info(base)).download_url+"&t="+Date.now();
 				s.src = await fetchAsDataURL(url);
 				s.async = false;
 				old.replaceWith(s);

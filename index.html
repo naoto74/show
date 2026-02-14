@@ -51,14 +51,14 @@
 			);
 			for(let old of document.querySelectorAll("link[rel=stylesheet]")){
 				const base = old.href.replace(location.origin+location.pathname, "");
-				const info = await info(base);
-				old.href = `data:text/css;base64,${info.content}`;
+				const datainfo = await info(base);
+				old.href = `data:text/css;base64,${datainfo.content}`;
 			}
 			for(let old of document.querySelectorAll("script[src]")){
 				const s = document.createElement("script");
 				const base = old.src.replace(location.origin+location.pathname, "");
-				const info = await info(base);
-				s.src = `data:text/javascript;base64,${info.content}`;
+				const datainfo = await info(base);
+				s.src = `data:text/javascript;base64,${datainfo.content}`;
 				s.async = false;
 				old.replaceWith(s);
 			}
